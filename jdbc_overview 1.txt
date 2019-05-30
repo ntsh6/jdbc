@@ -1,0 +1,126 @@
+The Java JDBC API (Java Database Connectivity) enables Java applications to connect to relational databases like MySQL, PostgreSQL, MS SQL Server, Oracle, H2 Database etc. The JDBC API makes is possible to query and update relational databases, as well as call stored procedures, and obtain meta data about the database. The Java JDBC API is part of the core Java SE SDK, making JDBC available to all Java applications that want to use it. Here is a diagram illustrating a Java application using JDBC to connect to a relational database:
+
+Java application using JDBC to connect to a database.
+JDBC is Database Independent
+The Java JDBC API standardizes how to connect to a database, how to execute queries against it, how to navigate the result of such a query, and how to execute updates in the database, how to call stored procedures, and how to obtain meta data from the database. By "standardizes" I mean that the code looks the same across different database products. Thus, changing to another database will be a lot easier, if your project needs that in the future.
+
+JDBC is Not SQL Independent
+JDBC does not standardize the SQL sent to the database. The SQL is written by you, the user of the JDBC API. The SQL dialect used by the various different databases will vary slightly, so to be 100% database independent, you SQL must also be 100% database independent (i.e. use commands understood by all databases).
+
+JDBC is Not For Non-Relational Databases
+The Java JDBC API is intended for interaction with relational databases, meaning databases that you interact with via standard SQL. The JDBC API is not intended for non-relational databases like Mongo DB, Cassandra, Dynamo etc. You can use such databases from a Java applications, but you should see what drivers these databases provide for Java themselves.
+
+Popular Relational Databases
+Here is a list of popular open source and commercial relational databases which have JDBC drivers so you can use them from Java:
+
+H2Database
+MariaDB
+PostgreSQL
+Derby
+Microsoft SQL Server
+Oracle
+JDBC Tutorial Scope
+This JDBC tutorial covers the version of JDBC available in Java 8+. The tutorial will not cover every single detail of the JDBC API, but focus on the most commonly used features. The rest you can read about in the JavaDoc's afterwards. Once you have a good understanding of JDBC, reading the last details in the JavaDoc or elsewhere, will not be so hard.
+
+This JDBC tutorial only covers the JDBC API. It does not cover SQL, databases and database design rules etc. The reader should study these concepts elsewhere.
+
+JDBC Core Concepts
+The core concepts of the Java JDBC API are:
+
+JDBC Driver
+Connection
+Statement
+PreparedStatement
+CallableStatement
+ResultSet
+Batch Updates
+Transactions
+DatabaseMetaData
+Each of these concepts are explained in more detail in their own tutorials. In the sections below I will just give a short overview of how these core components are used, though. Then you can dive into the other tutorials later on, when you have a basic understanding of JDBC.
+
+JDBC Example
+Before I start explaining how the individual components of JDBC works, I will show you a full JDBC example that loads the JDBC driver, opens a database connection, creates a Statement, executes a query, and iterates the returned ResultSet:
+
+import java.sql.*;
+
+public class JdbcExample {
+
+    public static void main(String[] args) throws ClassNotFoundException {
+        Class.forName("org.h2.Driver");
+
+        String url      = "jdbc:h2:~/test";   //database specific url.
+        String user     = "sa";
+        String password = "";
+
+        try(Connection connection = DriverManager.getConnection(url, user, password)) {
+            try(Statement statement = connection.createStatement()){
+                String sql = "select * from people";
+                try(ResultSet result = statement.executeQuery(sql)){
+                    while(result.next()) {
+                        String name = result.getString("name");
+                        long   age  = result.getLong  ("age");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+Don't worry if you don't understand it all. Each part of this example is explained in the sections below.
+
+Load JDBC Driver
+Before Java 6 it was necessary to load the JDBC driver before using it. After Java 6 this should no more be necessary though. Here is how loading the H2Database JDBC driver looks:
+
+Class.forName("org.h2.Driver");
+The Java String parameter passed to the Class forName() method is the name of the JDBC driver class for the given JDBC driver. You will have to find the right class name for the JDBC driver you are using. Typically, each database has its own JDBC driver, so you will have to look up what the JDBC driver class name is (if you are using pre Java 6).
+
+There are several different JDBC Driver Types. Each type has its own advantages and disadvantages. You will have to see what types of drivers your database vendor offers.
+
+Open Database Connection
+In order to communicate with the database, you must first open a JDBC connection to the database. Opening a JDBC database connection is explained in more detail in my tutorial about JDBC Connection, but here is a quick example of opening a JDBC Connection:
+
+String url      = "jdbc:h2:~/test";   //database specific url.
+String user     = "sa";
+String password = "";
+
+Connection connection =
+    DriverManager.getConnection(url, user, password);
+Once you have an open database connection, you will typically either be updating the database (inserting new records or updating existing ones), or query the database, meaning you read records from it. Both actions will be covered shortly in the following sections.
+
+Create Statement
+Whether you need to update or query the database, you will need to create a JDBC Statement or JDBC PreparedStatement through which the update or query will happen. Here is an example of creating a JDBC Statement instance:
+
+Statement statement = connection.createStatement();
+Update the Database
+When you have created a JDBC Statement or JDBC PreparedStatement instance you can update the database. Here is an example of updating the database via a Statement instance:
+
+Statement statement = connection.createStatement();
+
+String    sql       = "update people set name='John' where id=123";
+
+int rowsAffected    = statement.executeUpdate(sql);
+Query the Database
+You can also query the database via a JDBC Statement or PreparedStatement object. When you query the database you get a JDBC ResultSet back through which you can access the result of the query. Here is an example of executing a query against a database via JDBC:
+
+Statement statement = connection.createStatement();
+
+String sql = "select * from people";
+
+ResultSet result = statement.executeQuery(sql);
+
+while(result.next()) {
+
+    String name = result.getString("name");
+    long   age  = result.getLong  ("age");
+
+}
+Close Database Connection
+When you are done with the JDBC database connection, you have to close the connection again. A JDBC connection can take up a big amount of sources both inside your application, but also inside the database server. Therefore it is important to close the database connection again after use. You close a JDBC connection via its close() method. Here is an example of closing a JDBC connection:
+
+connection.close();
+Closing a JDBC connection is also covered in more detail in my JDBC Connection tutorial, in the close JDBC Connection section.
+
+Feel Free to Contact Me
+If you disagree with anything I write here about the JDBC tutorial, or just have comments, questions, etc, feel free to send me an email. You wouldn't be the first to do so. You can find my email address on the about page.
